@@ -6,54 +6,41 @@
     <link rel="stylesheet" href="style.css">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#000000" />
-    <meta name="description" content="Drone Scan Dashboard - Statistics and Analysis" />
+    <meta name="description" content="ACIT3855 statistics application" />
     <script src="updateStats.js"></script>
-    <title>Drone Scan - Dashboard</title>
+    <title>ACIT3855 - Maksym Zhos Drone Analitics</title>
 </head>
 
 <body>
     <main id="main">
         <div id="header">
-            <h1>Drone Scan Dashboard</h1>
-            <div id="logo-container">
-                <img src="https://cdnjs.cloudflare.com/ajax/libs/simple-icons/8.16.0/drone.svg" alt="Drone Scan Logo" id="logo">
-            </div>
+            <h1>Dashboard</h1>
         </div>
         <h5 id="last-updated">Last update: <span id="last-updated-value">N/A</span></h5>
         <div id="messages"></div>
-        <h2>System Statistics</h2>
+        <h2>Statistics</h2>
         <div id="statistics">
-            <div id="processing-container">
-                <h3>Processing Service Stats</h3>
-                <code id="processing-stats">Loading processing stats...</code>
+            <div id="processing">
+                <code id="processing-stats">Placeholder value - processing stats should appear here</code>
             </div>
-            <div id="analyzer-container">
-                <h3>Analyzer Service Stats</h3>
-                <code id="analyzer-stats">Loading analyzer stats...</code>
+            <div id="analyzer">
+                <code id="analyzer-stats">Placeholder value - analyzer stats should appear here</code>
             </div>
         </div>
-        <h2>Analyzer Events</h2>
-        <div id="analyzer-events">
+        <h2>Analyzer events</h2>
+        <div id="analyzer">
             <div>
-                <h3>Latest Location Event</h3>
-                <code id="event-location">Loading location event...</code>
+                <h3>Snow event</h3>
+                <code id="drone-position">
+                </code>
             </div>
             <div>
-                <h3>System Status</h3>
-                <div id="status-indicator">
-                    <div id="status-circle"></div>
-                    <span id="status-text">Checking status...</span>
-                </div>
-            </div>
-        </div>
-        <div id="data-visualization">
-            <h2>Data Visualization</h2>
-            <div id="chart-container">
-                <canvas id="data-chart"></canvas>
+                <h3>Lift event</h3>
+                <code id="target-acquisition">
+                </code>
             </div>
         </div>
     </main>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
 </body>
 
 </html>
