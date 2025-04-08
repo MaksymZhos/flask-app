@@ -1,3 +1,6 @@
+import os
+import requests
+from apscheduler.schedulers.background import BackgroundScheduler
 import connexion
 import yaml
 import logging
@@ -5,7 +8,6 @@ import logging.config
 import json
 from pykafka import KafkaClient
 from pykafka.common import OffsetType
-from flask_cors import CORS
 from datetime import datetime
 from connexion.middleware import MiddlewarePosition
 from starlette.middleware.cors import CORSMiddleware
@@ -20,8 +22,6 @@ with open('/app/log_conf.yml', 'r') as f:
 logger = logging.getLogger('analyzer')
 
 def get_drone_position(index):
-
-
     logger.info(f"Request for drone position at index {index}")
 
     # Connect to Kafka
@@ -33,7 +33,6 @@ def get_drone_position(index):
         consumer_timeout_ms=1000
     )
 
-
     drone_position_index = 0
     logger.info(f"Searching for drone position at index {index}")
 
@@ -41,7 +40,6 @@ def get_drone_position(index):
         if msg:
             message = msg.value.decode('utf-8')
             msg_data = json.loads(message)
-
 
             if msg_data.get('type') == 'drone_position':
                 if drone_position_index == int(index):
@@ -53,8 +51,6 @@ def get_drone_position(index):
     return {"message": f"No drone position message found at index {index}"}, 404
 
 def get_target_acquisition(index):
-
-
     logger.info(f"Request for target acquisition at index {index}")
 
     # Connect to Kafka
@@ -66,7 +62,6 @@ def get_target_acquisition(index):
         consumer_timeout_ms=1000
     )
 
-
     target_acquisition_index = 0
     logger.info(f"Searching for target acquisition at index {index}")
 
@@ -74,7 +69,6 @@ def get_target_acquisition(index):
         if msg:
             message = msg.value.decode('utf-8')
             msg_data = json.loads(message)
-
 
             if msg_data.get('type') == 'target_acquisition':
                 if target_acquisition_index == int(index):
@@ -86,10 +80,7 @@ def get_target_acquisition(index):
     return {"message": f"No target acquisition message found at index {index}"}, 404
 
 def get_stats():
-
-
     logger.info("Request for event stats")
-
 
     hostname = f"{app_config['events']['hostname']}:{app_config['events']['port']}"
     client = KafkaClient(hosts=hostname)
@@ -98,7 +89,6 @@ def get_stats():
         reset_offset_on_start=True,
         consumer_timeout_ms=1000
     )
-
 
     drone_position_count = 0
     target_acquisition_count = 0
@@ -122,36 +112,12 @@ def get_stats():
     return stats, 200
 
 def health():
-
     return {"status": "running"}, 200
 
-app = connexion.FlaskApp(__name__, specification_dir='')
-app.add_api("openapi.yml", strict_validation=True, validate_responses=True)
-CORS(app.app)
 
-import connexion
-import yaml
-import json
-import os
-import logging
-import logging.config
-import requests
-from datetime import datetime
-from apscheduler.schedulers.background import BackgroundScheduler
-from connexion.middleware import MiddlewarePosition
-from starlette.middleware.cors import CORSMiddleware
 
-with open('/app/config/app_conf.yml', 'r') as f:
-    app_config = yaml.safe_load(f.read())
 
-# Replace the basicConfig with proper config loading
-with open('/app/log_conf.yml', 'r') as f:
-    log_config = yaml.safe_load(f.read())
-    logging.config.dictConfig(log_config)
-
-logger = logging.getLogger('processing')
 def get_stats():
-
     logger.info("Received request for statistics.")
 
     stats_file = app_config['datastore']['filename']
@@ -184,7 +150,6 @@ def populate_stats():
     with open(app_config['datastore']['filename'], 'r') as f:
         stats = json.load(f)
 
-
     current_timestamp = datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
     def fetch_and_update_events(url, event_type, timestamp_key, value_key):
@@ -201,7 +166,6 @@ def populate_stats():
     fetch_and_update_events(app_config['eventstores']['drone_positions']['url'], 'num_drone_positions', 'signal_strength', 'max_signal_strength')
     fetch_and_update_events(app_config['eventstores']['target_acquisitions']['url'], 'num_target_acquisitions', 'certainty', 'max_certainty')
 
-
     stats['last_updated'] = current_timestamp
 
     with open(app_config['datastore']['filename'], 'w') as f:
@@ -216,19 +180,18 @@ def init_scheduler():
     )
     scheduler.start()
 
-
 app = connexion.FlaskApp(__name__, specification_dir='')
 app.add_api("openapi.yml", strict_validation=True, validate_responses=True)
 
-
-app.app.add_middleware(
+# Add CORS middleware using the Connexion/Starlette approach
+app.add_middleware(
     CORSMiddleware,
+    position=MiddlewarePosition.BEFORE_EXCEPTION,
     allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 if __name__ == "__main__":
     app.run(port=8200, host="0.0.0.0")
