@@ -1,13 +1,16 @@
-
-const PROCESSING_STATS_API_URL = `http://processing:8100/stats`;
+// Define API URLs for our services
+// Note: Using relative URLs so it works regardless of host
+const PROCESSING_STATS_URL = `/processing-api/stats`;
 const ANALYZER_API_URL = {
-    stats: `http://analyzer:8200/stats`,
-    location: `http://analyzer:8200/events/location/latest`
+    stats: `/analyzer-api/stats`,
+    dronePosition: `/analyzer-api/drone/position`,
+    targetAcquisition: `/analyzer-api/drone/target-acquisition`
 };
+
 // Chart reference for updating data visualization
 let dataChart = null;
 
-// This function makes API requests
+// This function makes API requests with error handling
 const makeRequest = (url, callback) => {
     fetch(url)
     .then(response => {
@@ -17,12 +20,12 @@ const makeRequest = (url, callback) => {
         return response.json();
     })
     .then((result) => {
-        console.log("Received data: ", result);
+        console.log(`Received data from ${url}:`, result);
         callback(result);
         updateStatusIndicator(true);
     })
     .catch((error) => {
-        console.error("Error fetching data:", error);
+        console.error(`Error fetching data from ${url}:`, error);
         updateErrorMessages(error.message);
         updateStatusIndicator(false);
     });
@@ -39,12 +42,29 @@ const updateCodeDiv = (result, elemId) => {
 // Get formatted current date/time
 const getLocaleDateStr = () => (new Date()).toLocaleString();
 
+// Get a random event from the analyzer service
+const getRandomEvent = () => {
+    // Generate random index between 0-5 (assuming we have some events)
+    const randomIndex = Math.floor(Math.random() * 5);
+
+    // Randomly choose between drone position and target acquisition
+    if (Math.random() > 0.5) {
+        makeRequest(`${ANALYZER_API_URL.dronePosition}?index=${randomIndex}`, (result) => {
+            updateCodeDiv(result, "event-location");
+        });
+    } else {
+        makeRequest(`${ANALYZER_API_URL.targetAcquisition}?index=${randomIndex}`, (result) => {
+            updateCodeDiv(result, "event-location");
+        });
+    }
+};
+
 // Main function to get all stats
 const getStats = () => {
     document.getElementById("last-updated-value").innerText = getLocaleDateStr();
 
     // Get processing service stats
-    makeRequest(PROCESSING_STATS_API_URL, (result) => {
+    makeRequest(PROCESSING_STATS_URL, (result) => {
         updateCodeDiv(result, "processing-stats");
         updateChart(result);
     });
@@ -54,10 +74,8 @@ const getStats = () => {
         updateCodeDiv(result, "analyzer-stats");
     });
 
-    // Get latest location event
-    makeRequest(ANALYZER_API_URL.location, (result) => {
-        updateCodeDiv(result, "event-location");
-    });
+    // Get a random event
+    getRandomEvent();
 };
 
 // Update system status indicator
@@ -108,14 +126,24 @@ const initializeChart = () => {
         type: 'line',
         data: {
             labels: ['Initial'],
-            datasets: [{
-                label: 'Total Events',
-                data: [0],
-                borderColor: '#0056b3',
-                backgroundColor: 'rgba(0, 86, 179, 0.1)',
+            datasets: [
+                {
+                    label: 'Drone Positions',
+                    data: [0],
+                    borderColor: '#0056b3',
+                    backgroundColor: 'rgba(0, 86, 179, 0.1)',
                           tension: 0.4,
                           fill: true
-            }]
+                },
+                {
+                    label: 'Target Acquisitions',
+                    data: [0],
+                    borderColor: '#dc3545',
+                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                          tension: 0.4,
+                          fill: true
+                }
+            ]
         },
         options: {
             responsive: true,
@@ -136,21 +164,25 @@ const initializeChart = () => {
 const updateChart = (data) => {
     if (!dataChart) return;
 
-    // Get timestamps for labels (or use placeholder if not available)
-    const timestamp = data.last_updated || getLocaleDateStr();
+    // Get timestamps for labels
+    const timestamp = data.last_updated ? new Date(data.last_updated).toLocaleTimeString() : getLocaleDateStr();
 
     // Only keep the last 10 data points for better visualization
     if (dataChart.data.labels.length > 9) {
         dataChart.data.labels.shift();
         dataChart.data.datasets[0].data.shift();
+        dataChart.data.datasets[1].data.shift();
     }
 
     // Add new data
     dataChart.data.labels.push(timestamp);
 
-    // Use appropriate data from the response, or a dummy value if not available
-    const totalEvents = data.num_data_points || data.total_events || Math.floor(Math.random() * 100);
-    dataChart.data.datasets[0].data.push(totalEvents);
+    // Use appropriate data from the response
+    const dronePositions = data.num_drone_positions || data.num_drone_position || 0;
+    const targetAcquisitions = data.num_target_acquisitions || data.num_target_acquisition || 0;
+
+    dataChart.data.datasets[0].data.push(dronePositions);
+    dataChart.data.datasets[1].data.push(targetAcquisitions);
 
     // Update the chart
     dataChart.update();
@@ -164,7 +196,7 @@ const setup = () => {
     // Get initial stats
     getStats();
 
-    // Set up auto-refresh every 3 seconds (between 2-4 seconds as specified)
+    // Set up auto-refresh every 3 seconds
     setInterval(getStats, 3000);
 };
 

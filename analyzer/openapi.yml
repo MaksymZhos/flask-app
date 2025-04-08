@@ -211,6 +211,7 @@ components:
       required:
         - num_drone_position
         - num_target_acquisition
+        - last_updated
       properties:
         num_drone_position:
           type: integer
@@ -218,3 +219,7 @@ components:
         num_target_acquisition:
           type: integer
           example: 50
+        last_updated:
+          type: string
+          format: date-time
+          example: "2025-01-07T10:00:00.000Z"
