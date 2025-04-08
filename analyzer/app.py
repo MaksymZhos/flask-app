@@ -220,9 +220,9 @@ def init_scheduler():
 app = connexion.FlaskApp(__name__, specification_dir='')
 app.add_api("openapi.yml", strict_validation=True, validate_responses=True)
 
-app.add_middleware(
+# Add CORS middleware to the ASGI app
+app.app.add_middleware(
     CORSMiddleware,
-    position=MiddlewarePosition.BEFORE_EXCEPTION,
     allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
