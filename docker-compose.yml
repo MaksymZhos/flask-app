@@ -143,7 +143,7 @@ services:
       context: ./dashboard
       dockerfile: Dockerfile
     ports:
-      - "80:80"
+      - "8300:80"  # Changed to use port 8300 on the host
     depends_on:
       - processing
       - analyzer
