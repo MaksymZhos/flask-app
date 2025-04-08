@@ -1,0 +1,6 @@
+---
+- name: Deploy Flask application to Oracle VM
+  hosts: webservers
+  become: yes
+  roles:
+    - deploy

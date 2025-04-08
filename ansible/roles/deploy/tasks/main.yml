@@ -1,0 +1,97 @@
+---
+    - name: Ensure application directories exist
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+      with_items:
+        - /home/{{ ansible_user }}/flask-app
+        - /home/{{ ansible_user }}/flask-app/data
+      become: yes
+
+    - name: Ensure logs directory exists with proper permissions
+      file:
+        path: /home/{{ ansible_user }}/flask-app/logs
+        state: directory
+        mode: '0777'
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+      become: yes
+
+    - name: Set permissions on log files
+      shell: find /home/{{ ansible_user }}/flask-app/logs -type f -exec chmod 666 {} \;
+      become: yes
+      ignore_errors: yes
+
+    - name: Set permissions on data files
+      shell: find /home/{{ ansible_user }}/flask-app/data -type f -exec chmod 666 {} \;
+      become: yes
+      ignore_errors: yes
+
+    - name: Check if directory is a git repository
+      stat:
+        path: /home/{{ ansible_user }}/flask-app/.git
+      register: git_check
+      become: yes
+
+    - name: Check if remote origin exists
+      shell: cd /home/{{ ansible_user }}/flask-app && git remote -v | grep origin || echo "No remote"
+      register: git_remote_check
+      become: yes
+      become_user: "{{ ansible_user }}"
+      changed_when: false
+      when: git_check.stat.exists
+
+    - name: Add Git remote if it doesn't exist
+      shell: cd /home/{{ ansible_user }}/flask-app && git remote add origin git@github.com:MaksymZhos/flask-app.git
+      become: yes
+      become_user: "{{ ansible_user }}"
+      when: git_check.stat.exists and ('No remote' in git_remote_check.stdout or git_remote_check.stdout == '')
+
+    - name: Pull latest changes if repository exists
+      shell: cd /home/{{ ansible_user }}/flask-app && git pull origin master
+      become: yes
+      become_user: "{{ ansible_user }}"
+      when: git_check.stat.exists and not ('No remote' in git_remote_check.stdout or git_remote_check.stdout == '')
+      register: git_pull_result
+      ignore_errors: yes
+
+    - name: Remove existing directory if pull failed
+      file:
+        path: /home/{{ ansible_user }}/flask-app
+        state: absent
+      become: yes
+      when: git_check.stat.exists and git_pull_result.rc is defined and git_pull_result.rc != 0
+
+    - name: Clone Git repository if needed
+      git:
+        repo: git@github.com:MaksymZhos/flask-app.git
+        dest: /home/{{ ansible_user }}/flask-app
+        version: master
+        accept_hostkey: yes
+      become: yes
+      become_user: "{{ ansible_user }}"
+      when: not git_check.stat.exists or (git_pull_result.rc is defined and git_pull_result.rc != 0)
+
+    - name: Stop existing Docker containers
+      shell: cd /home/{{ ansible_user }}/flask-app && docker-compose down
+      ignore_errors: yes
+      become: yes
+      become_user: "{{ ansible_user }}"
+
+    - name: Start containers with Docker Compose
+      shell: cd /home/{{ ansible_user }}/flask-app && docker-compose up -d
+      become: yes
+      become_user: "{{ ansible_user }}"
+
+    - name: Check if services are running
+      shell: docker ps
+      register: docker_status
+      become: yes
+      become_user: "{{ ansible_user }}"
+
+    - name: Display running containers
+      debug:
+        var: docker_status.stdout_lines

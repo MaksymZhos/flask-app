@@ -3,10 +3,12 @@ import yaml
 import json
 import os
 import logging
-import logging.config  # Make sure this import is added
+import logging.config
 import requests
 from datetime import datetime
 from apscheduler.schedulers.background import BackgroundScheduler
+from connexion.middleware import MiddlewarePosition
+from starlette.middleware.cors import CORSMiddleware
 
 with open('/app/config/app_conf.yml', 'r') as f:
     app_config = yaml.safe_load(f.read())
@@ -86,6 +88,16 @@ def init_scheduler():
 
 app = connexion.FlaskApp(__name__, specification_dir='')
 app.add_api("openapi.yml", strict_validation=True, validate_responses=True)
+
+app = FlaskApp(__name__)
+app.add_middleware(
+    CORSMiddleware,
+    position=MiddlewarePosition.BEFORE_EXCEPTION,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 if __name__ == "__main__":
     create_files_if_not_exist()
