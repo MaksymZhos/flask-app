@@ -1,0 +1,142 @@
+version: '3.8'
+services:
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_USER: drone_scan
+      MYSQL_PASSWORD: crx45-12
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: locations
+    volumes:
+      - ./data/database:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "22181:2181"
+    volumes:
+      - zookeeper-data:/var/lib/zookeeper/data
+    healthcheck:
+      test: ["CMD-SHELL", "echo mntr | nc localhost 2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    volumes:
+      - ./data/kafka:/kafka
+    healthcheck:
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+  receiver:
+    build:
+      context: ./receiver
+      dockerfile: Dockerfile
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./config/receiver:/app/config
+      - ./config/log_conf.yml:/app/log_conf.yml
+      - ./logs:/app/logs
+    environment:
+      - APP_CONF_FILE=/app/config/app_conf.yml
+      - LOG_CONF_FILE=/app/log_conf.yml
+      - SERVICE_NAME=receiver
+    user: nobody
+    restart: on-failure:3
+  storage:
+    build:
+      context: ./storage
+      dockerfile: Dockerfile
+    depends_on:
+      kafka:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    volumes:
+      - ./config/storage:/app/config
+      - ./config/log_conf.yml:/app/log_conf.yml
+      - ./logs:/app/logs
+    environment:
+      - APP_CONF_FILE=/app/config/app_conf.yml
+      - LOG_CONF_FILE=/app/log_conf.yml
+      - SERVICE_NAME=storage
+    user: nobody
+    restart: on-failure:3
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8090/ui/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+  processing:
+    build:
+      context: ./processing
+      dockerfile: Dockerfile
+    depends_on:
+      storage:
+        condition: service_healthy
+    ports:
+      - "8100:8100"
+    user: nobody
+    volumes:
+      - ./config/processing:/app/config
+      - ./config/log_conf.yml:/app/log_conf.yml
+      - ./logs:/app/logs
+      - ./data/processing:/app/data
+    environment:
+      - APP_CONF_FILE=/app/config/app_conf.yml
+      - LOG_CONF_FILE=/app/log_conf.yml
+      - SERVICE_NAME=processing
+  analyzer:
+    build:
+      context: ./analyzer
+      dockerfile: Dockerfile
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8200:8200"
+    volumes:
+      - ./config/analyzer:/app/config
+      - ./config/log_conf.yml:/app/log_conf.yml
+      - ./logs:/app/logs
+    environment:
+      - APP_CONF_FILE=/app/config/app_conf.yml
+      - LOG_CONF_FILE=/app/log_conf.yml
+      - SERVICE_NAME=analyzer
+    user: nobody
+    restart: on-failure:3
+volumes:
+  zookeeper-data:

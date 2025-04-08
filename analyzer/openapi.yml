@@ -1,0 +1,220 @@
+openapi: 3.0.0
+info:
+  description: This API provides analyzer capabilities for the drone system
+  version: "1.0.0"
+  title: Drone Events Analyzer API
+  contact:
+    email: maksymzhos@proton.me
+paths:
+  /drone/position:
+    get:
+      summary: Gets a drone position event from history
+      operationId: app.get_drone_position
+      description: Retrieves the drone position event message at the specified index
+      parameters:
+        - name: index
+          in: query
+          description: Gets the drone position at the index in the event store
+          required: true
+          schema:
+            type: integer
+            example: 0
+      responses:
+        '200':
+          description: Successfully returned a drone position event
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DronePositionEvent'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+  /drone/target-acquisition:
+    get:
+      summary: Gets a target acquisition event from history
+      operationId: app.get_target_acquisition
+      description: Retrieves the target acquisition event message at the specified index
+      parameters:
+        - name: index
+          in: query
+          description: Gets the target acquisition at the index in the event store
+          required: true
+          schema:
+            type: integer
+            example: 0
+      responses:
+        '200':
+          description: Successfully returned a target acquisition event
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TargetAcquisitionEvent'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+  /stats:
+    get:
+      summary: Gets the event statistics
+      operationId: app.get_stats
+      description: Gets the count of each event type in the queue
+      responses:
+        '200':
+          description: Successfully returned event statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Stats'
+  /health:
+    get:
+      summary: Health check endpoint
+      operationId: app.health
+      description: Checks if the service is running
+      responses:
+        '200':
+          description: Service is running
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+components:
+  schemas:
+    DronePositionEvent:
+      type: object
+      required:
+        - drone_id
+        - latitude
+        - longitude
+        - altitude
+        - signal_strength
+        - timestamp
+        - trace_id
+      properties:
+        drone_id:
+          type: string
+          description: Unique identifier of the drone
+          example: "drone123"
+        latitude:
+          type: number
+          description: Latitude of the drone's position
+          example: 34.0522
+        longitude:
+          type: number
+          description: Longitude of the drone's position
+          example: -118.2437
+        altitude:
+          type: number
+          description: Altitude of the drone in meters
+          example: 500
+        signal_strength:
+          type: number
+          description: Signal strength in decibels (dBm)
+          example: 75
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp when the position was recorded
+          example: "2025-01-07T10:00:00.000Z"
+        trace_id:
+          type: string
+          description: Unique identifier for tracking the event across services
+          example: "550e8400-e29b-41d4-a716-446655440000"
+    TargetAcquisitionEvent:
+      type: object
+      required:
+        - drone_id
+        - target_id
+        - acquisition_type
+        - target_type
+        - latitude
+        - longitude
+        - altitude
+        - certainty
+        - timestamp
+        - trace_id
+      properties:
+        drone_id:
+          type: string
+          description: Unique identifier of the drone that acquired the target
+          example: "drone123"
+        target_id:
+          type: string
+          description: Unique identifier of the target acquired by the drone
+          example: "target456"
+        acquisition_type:
+          type: string
+          description: Method used to acquire the target (e.g., visual, thermal, radar)
+          example: "visual"
+        target_type:
+          type: string
+          description: Type of target acquired (e.g., truck, human, group of humans, etc.)
+          example: "truck"
+        latitude:
+          type: number
+          description: Latitude of the target's position
+          example: 34.0522
+        longitude:
+          type: number
+          description: Longitude of the target's position
+          example: -118.2437
+        altitude:
+          type: number
+          description: Altitude of the target in meters
+          example: 500
+        certainty:
+          type: number
+          description: The certainty of the target recognition (0 to 100 scale)
+          example: 85
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp when the target was acquired
+          example: "2025-01-07T10:05:00.000Z"
+        trace_id:
+          type: string
+          description: Unique identifier for tracking the event across services
+          example: "550e8400-e29b-41d4-a716-446655440000"
+    Stats:
+      type: object
+      required:
+        - num_drone_position
+        - num_target_acquisition
+      properties:
+        num_drone_position:
+          type: integer
+          example: 100
+        num_target_acquisition:
+          type: integer
+          example: 50

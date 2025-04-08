@@ -1,0 +1,12 @@
+version: 1
+database:
+  user: drone_scan
+  password: crx45-12
+  hostname: 172.20.0.2
+  db_name: locations
+  port: 3306
+events:
+  hostname: localhost
+  port: 29092
+  topic: events
+

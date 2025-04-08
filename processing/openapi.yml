@@ -1,0 +1,54 @@
+openapi: 3.0.0
+info:
+  description: This API provides drone event statistics
+  version: "1.0.0"
+  title: Drone Event Statistics API
+paths:
+  /stats:
+    get:
+      summary: Gets the drone event statistics
+      operationId: app.get_stats
+      description: Gets processed statistics for drone positions and target acquisitions
+      responses:
+        '200':
+          description: Successfully returned drone event statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventStats'
+        '404':
+          description: Statistics not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+components:
+  schemas:
+    EventStats:
+      required:
+        - num_drone_positions
+        - num_target_acquisitions
+        - max_signal_strength
+        - max_certainty
+        - last_updated
+      properties:
+        num_drone_positions:
+          type: integer
+          example: 1500
+        num_target_acquisitions:
+          type: integer
+          example: 750
+        max_signal_strength:
+          type: integer
+          example: 95
+        max_certainty:
+          type: integer
+          example: 98
+        last_updated:
+          type: string
+          format: date-time
+          example: "2025-02-18T10:15:30"
+      type: object

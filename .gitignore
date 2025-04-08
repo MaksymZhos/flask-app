@@ -1,0 +1,26 @@
+# Python specific
+__pycache__/
+*.py[cod]
+*.class
+*.so
+.Python
+venv/
+ENV/
+
+# Flask specific
+instance/
+.webassets-cache
+
+# Docker & environment specific
+*.env
+*.prod.env
+config.prod.py
+
+# Data and logs
+data/
+logs/
+
+# IDE files
+.idea/
+.vscode/
+*.swp

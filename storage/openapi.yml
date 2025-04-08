@@ -1,0 +1,173 @@
+openapi: 3.0.0
+info:
+  title: Drone Position and Target Acquisition Logger API
+  description: API to log drone position and the targets they acquire during flight
+  version: '1.0'
+
+paths:
+  /drone/position:
+    get:
+      tags:
+        - drone
+      summary: Gets drone position events within a timeframe
+      operationId: app.get_drone_positions
+      description: Gets drone position events between the start and end timestamps
+      parameters:
+        - name: start_timestamp
+          in: query
+          description: Starting timestamp for events to retrieve
+          schema:
+            type: string
+            format: date-time
+          required: true
+          example: "2025-01-07T10:00:00.000Z"
+        - name: end_timestamp
+          in: query
+          description: Ending timestamp for events to retrieve
+          schema:
+            type: string
+            format: date-time
+          required: true
+          example: "2025-01-08T10:00:00.000Z"
+      responses:
+        '200':
+          description: Successfully returned a list of drone position events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DronePositionEvent'
+
+  /drone/target-acquisition:
+    get:
+      tags:
+        - drone
+      summary: Gets target acquisition events within a timeframe
+      operationId: app.get_target_acquisitions
+      description: Gets target acquisition events between the start and end timestamps
+      parameters:
+        - name: start_timestamp
+          in: query
+          description: Starting timestamp for events to retrieve
+          schema:
+            type: string
+            format: date-time
+          required: true
+          example: "2025-01-07T10:00:00.000Z"
+        - name: end_timestamp
+          in: query
+          description: Ending timestamp for events to retrieve
+          schema:
+            type: string
+            format: date-time
+          required: true
+          example: "2025-01-08T10:00:00.000Z"
+      responses:
+        '200':
+          description: Successfully returned a list of target acquisition events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TargetAcquisitionEvent'
+
+components:
+  schemas:
+    DronePositionEvent:
+      type: object
+      required:
+        - drone_id
+        - latitude
+        - longitude
+        - altitude
+        - signal_strength
+        - timestamp
+      properties:
+        drone_id:
+          type: string
+          format: uuid
+          description: Unique identifier of the drone
+          example: "drone123"
+        latitude:
+          type: number
+          description: Latitude of the drone's position
+          example: 34.0522
+        longitude:
+          type: number
+          description: Longitude of the drone's position
+          example: -118.2437
+        altitude:
+          type: number
+          description: Altitude of the drone in meters
+          example: 500
+        signal_strength:
+          type: number
+          description: Signal strength in decibels (dBm)
+          example: 75
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp when the position was recorded
+          example: "2025-01-07T10:00:00.000Z"
+        trace_id:
+          type: string
+          description: Unique identifier for tracking the event across services
+          example: "550e8400-e29b-41d4-a716-446655440000"
+
+    TargetAcquisitionEvent:
+      type: object
+      required:
+        - drone_id
+        - target_id
+        - acquisition_type
+        - target_type
+        - latitude
+        - longitude
+        - altitude
+        - certainty
+        - timestamp
+      properties:
+        drone_id:
+          type: string
+          format: uuid
+          description: Unique identifier of the drone that acquired the target
+          example: "drone123"
+        target_id:
+          type: string
+          description: Unique identifier of the target acquired by the drone
+          example: "target456"
+        acquisition_type:
+          type: string
+          description: Method used to acquire the target (e.g., visual, thermal, radar)
+          example: "visual"
+        target_type:
+          type: string
+          description: Type of target acquired (e.g., truck, human, group of humans, etc.)
+          example: "truck"
+        latitude:
+          type: number
+          description: Latitude of the target's position
+          example: 34.0522
+        longitude:
+          type: number
+          description: Longitude of the target's position
+          example: -118.2437
+        altitude:
+          type: number
+          description: Altitude of the target in meters
+          example: 500
+        certainty:
+          type: number
+          description: The certainty of the target recognition (0 to 100 scale)
+          example: 85
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp when the target was acquired
+          example: "2025-01-07T10:05:00.000Z"
+        trace_id:
+          type: string
+          description: Unique identifier for tracking the event across services
+          example: "550e8400-e29b-41d4-a716-446655440000"

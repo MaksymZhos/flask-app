@@ -1,0 +1,9 @@
+version: 1
+server:
+  port: 8200
+events:
+  hostname: "kafka"
+  port: 9092
+  topic: "events"  # Adjust this topic name as needed
+
+# Other configuration specific to your analyzer service

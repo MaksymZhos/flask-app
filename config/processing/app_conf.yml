@@ -1,0 +1,10 @@
+version: 1
+datastore:
+  filename: /app/data/data.json
+scheduler:
+  interval: 5
+eventstores:
+  drone_positions:
+    url: http://storage:8090/drone/position
+  target_acquisitions:
+    url: http://storage:8090/drone/target-acquisition
