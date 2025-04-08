@@ -82,7 +82,7 @@
       become_user: "{{ ansible_user }}"
 
     - name: Start containers with Docker Compose
-      shell: cd /home/{{ ansible_user }}/flask-app && docker-compose up -d
+      shell: cd /home/{{ ansible_user }}/flask-app && docker-compose up -d --build
       become: yes
       become_user: "{{ ansible_user }}"
 

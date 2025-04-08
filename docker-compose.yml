@@ -138,5 +138,15 @@ services:
       - SERVICE_NAME=analyzer
     user: nobody
     restart: on-failure:3
+  dashboard:
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - processing
+      - analyzer
+    restart: always
 volumes:
   zookeeper-data:
