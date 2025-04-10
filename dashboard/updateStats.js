@@ -1,10 +1,13 @@
 /* UPDATE THESE VALUES TO MATCH YOUR SETUP */
 
-const PROCESSING_STATS_API_URL = "http://155.248.219.72:8300/processing-api/stats"
+// Using the Nginx reverse proxy endpoints
+const VM_IP = "155.248.219.72"  // Your VM IP address
+const VM_PORT = "8300"
+const PROCESSING_STATS_API_URL = `http://${VM_IP}:${VM_PORT}/processing/stats`
 const ANALYZER_API_URL = {
-    stats: "http://155.248.219.72:8300/analyzer-api/stats",
-    drone_position: "http://155.248.219.72:8300/analyzer-api/drone/position?index=2",
-    target_acquisition: "http://155.248.219.72:8300/analyzer-api/drone/target-acquisition?index=3"
+    stats: `http://${VM_IP}:${VM_PORT}/analyzer/stats`,
+    drone_position: `http://${VM_IP}:${VM_PORT}/analyzer/drone/position?index=2`,
+    target_acquisition: `http://${VM_IP}:${VM_PORT}/analyzer/drone/target-acquisition?index=3`
 }
 
 // This function fetches and updates the general statistics

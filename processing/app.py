@@ -13,7 +13,7 @@ from starlette.middleware.cors import CORSMiddleware
 with open('/app/config/app_conf.yml', 'r') as f:
     app_config = yaml.safe_load(f.read())
 
-# Replace the basicConfig with proper config loading
+
 with open('/app/log_conf.yml', 'r') as f:
     log_config = yaml.safe_load(f.read())
     logging.config.dictConfig(log_config)
@@ -67,6 +67,7 @@ def populate_stats():
             for event in events:
                 stats[value_key] = max(stats[value_key], event[timestamp_key])
 
+
     fetch_and_update_events(app_config['eventstores']['drone_positions']['url'], 'num_drone_positions', 'signal_strength', 'max_signal_strength')
     fetch_and_update_events(app_config['eventstores']['target_acquisitions']['url'], 'num_target_acquisitions', 'certainty', 'max_certainty')
 
@@ -87,17 +88,18 @@ def init_scheduler():
 
 
 app = connexion.FlaskApp(__name__, specification_dir='')
-app.add_api("openapi.yml", strict_validation=True, validate_responses=True)
+app.add_api("openapi.yml", base_path="/processing", strict_validation=True, validate_responses=True)
 
 
-app.add_middleware(
-    CORSMiddleware,
-    position=MiddlewarePosition.BEFORE_EXCEPTION,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+if "CORS_ALLOW_ALL" in os.environ and os.environ["CORS_ALLOW_ALL"] == "yes":
+    app.add_middleware(
+        CORSMiddleware,
+        position=MiddlewarePosition.BEFORE_EXCEPTION,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 if __name__ == "__main__":
     create_files_if_not_exist()

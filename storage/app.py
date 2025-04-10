@@ -9,9 +9,12 @@ import yaml
 import logging
 import logging.config
 import json
+import os
 from pykafka import KafkaClient
 from pykafka.common import OffsetType
 from threading import Thread
+from connexion.middleware import MiddlewarePosition
+from starlette.middleware.cors import CORSMiddleware
 
 
 with open('/app/config/app_conf.yml', 'r') as f:
@@ -170,7 +173,18 @@ def setup_kafka_thread():
     logger.info("Kafka consumer thread setup complete")
 
 app = connexion.FlaskApp(__name__, specification_dir='')
-app.add_api("openapi.yml", strict_validation=True, validate_responses=True)
+app.add_api("openapi.yml", base_path="/storage", strict_validation=True, validate_responses=True)
+
+
+if "CORS_ALLOW_ALL" in os.environ and os.environ["CORS_ALLOW_ALL"] == "yes":
+    app.add_middleware(
+        CORSMiddleware,
+        position=MiddlewarePosition.BEFORE_EXCEPTION,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 if __name__ == "__main__":
     setup_kafka_thread()

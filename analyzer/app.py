@@ -3,6 +3,7 @@ import yaml
 import logging
 import logging.config
 import json
+import os
 from pykafka import KafkaClient
 from pykafka.common import OffsetType
 from connexion.middleware import MiddlewarePosition
@@ -56,7 +57,7 @@ def get_target_acquisition(index):
 
     logger.info(f"Request for target acquisition at index {index}")
 
-    # Connect to Kafka
+
     hostname = f"{app_config['events']['hostname']}:{app_config['events']['port']}"
     client = KafkaClient(hosts=hostname)
     topic = client.topics[str.encode(app_config['events']['topic'])]
@@ -125,17 +126,18 @@ def health():
     return {"status": "running"}, 200
 
 app = connexion.FlaskApp(__name__, specification_dir='')
-app.add_api("openapi.yml", strict_validation=True, validate_responses=True)
+app.add_api("openapi.yml", base_path="/analyzer", strict_validation=True, validate_responses=True)
 
 
-app.add_middleware(
-    CORSMiddleware,
-    position=MiddlewarePosition.BEFORE_EXCEPTION,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+if "CORS_ALLOW_ALL" in os.environ and os.environ["CORS_ALLOW_ALL"] == "yes":
+    app.add_middleware(
+        CORSMiddleware,
+        position=MiddlewarePosition.BEFORE_EXCEPTION,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 
 if __name__ == "__main__":
