@@ -74,7 +74,7 @@ services:
       - APP_CONF_FILE=/app/config/app_conf.yml
       - LOG_CONF_FILE=/app/log_conf.yml
       - SERVICE_NAME=receiver
-      - CORS_ALLOW_ALL=no
+      - CORS_ALLOW_ALL=${CORS_ALLOW_ALL}
     user: nobody
     restart: on-failure:3
     deploy:
@@ -99,7 +99,7 @@ services:
       - APP_CONF_FILE=/app/config/app_conf.yml
       - LOG_CONF_FILE=/app/log_conf.yml
       - SERVICE_NAME=storage
-      - CORS_ALLOW_ALL=no
+      - CORS_ALLOW_ALL=${CORS_ALLOW_ALL}
     user: nobody
     restart: on-failure:3
     healthcheck:
@@ -128,7 +128,7 @@ services:
       - APP_CONF_FILE=/app/config/app_conf.yml
       - LOG_CONF_FILE=/app/log_conf.yml
       - SERVICE_NAME=processing
-      - CORS_ALLOW_ALL=no
+      - CORS_ALLOW_ALL=${CORS_ALLOW_ALL}
     networks:
       - drone-network
 
@@ -147,7 +147,7 @@ services:
       - APP_CONF_FILE=/app/config/app_conf.yml
       - LOG_CONF_FILE=/app/log_conf.yml
       - SERVICE_NAME=analyzer
-      - CORS_ALLOW_ALL=no
+      - CORS_ALLOW_ALL=${CORS_ALLOW_ALL}
     user: nobody
     restart: on-failure:3
     networks:
