@@ -164,7 +164,7 @@ services:
     networks:
       - drone-network
 
-nginx:
+  nginx:
     image: nginx:alpine
     ports:
       - "8300:80"
