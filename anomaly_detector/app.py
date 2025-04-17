@@ -49,10 +49,10 @@ def update_anomalies():
             is_anomaly = False
 
             if msg_data.get('type') == 'drone_position':
-                if msg_data.get('signal_strength', 100) < 60:
+                if msg_data.get('payload', {}).get('signal_strength', 100) < 60:
                     is_anomaly = True
             elif msg_data.get('type') == 'target_acquisition':
-                if msg_data.get('certainty', 100) < 70:
+                if msg_data.get('payload', {}).get('certainty', 100) < 70:
                     is_anomaly = True
 
             if is_anomaly:
