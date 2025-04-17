@@ -32,6 +32,12 @@ handlers:
     formatter: simple
     filename: /app/logs/analyzer.log
     mode: a
+  anomaly_detector_file:
+    class: logging.FileHandler
+    level: DEBUG
+    formatter: simple
+    filename: /app/logs/anomaly_detector.log
+    mode: a
 loggers:
   receiver:
     level: DEBUG
@@ -48,6 +54,10 @@ loggers:
   analyzer:
     level: DEBUG
     handlers: [console, analyzer_file]
+    propagate: no
+  anomaly_detector:
+    level: DEBUG
+    handlers: [console, anomaly_detector_file]
     propagate: no
 root:
   level: DEBUG

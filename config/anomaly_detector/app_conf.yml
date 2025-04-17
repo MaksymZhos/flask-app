@@ -1,0 +1,11 @@
+version: 1
+server:
+  port: 8400
+events:
+  hostname: "kafka"
+  port: 9092
+  topic: "events"
+datastore:
+  filename: /app/data/data.json
+
+
