@@ -71,39 +71,55 @@ def update_anomalies():
     return {"num_anomalies": anomaly_count}, 200
 
 def get_anomalies(event_type=None):
-
-
     logger.info(f"Request to get anomalies with event_type filter: {event_type}")
-
 
     if not os.path.exists(app_config['datastore']['filename']):
         logger.error("Anomaly datastore file not found")
         return {"message": "Anomaly datastore not found"}, 404
 
     try:
-
         with open(app_config['datastore']['filename'], 'r') as f:
             anomalies = json.load(f)
-
 
         valid_event_types = ['drone_position', 'target_acquisition']
         if event_type and event_type not in valid_event_types:
             logger.error(f"Invalid event type provided: {event_type}")
             return {"message": f"Invalid event type. Must be one of: {', '.join(valid_event_types)}"}, 400
 
-
         if event_type:
             filtered_anomalies = [anomaly for anomaly in anomalies if anomaly.get('type') == event_type]
         else:
             filtered_anomalies = anomalies
 
-
         if not filtered_anomalies:
             logger.info("No anomalies found matching criteria")
             return None, 204
+            
+        # Transform anomalies to match the expected response schema
+        transformed_anomalies = []
+        for anomaly in filtered_anomalies:
+            # Map the stored anomaly to the expected response format
+            transformed = {
+                "drone_id": anomaly.get('payload', {}).get('drone_id', 'unknown'),
+                "event_id": anomaly.get('payload', {}).get('trace_id', 'unknown'),
+                "trace_id": anomaly.get('payload', {}).get('trace_id', 'unknown'),
+                "event_type": anomaly.get('type', 'unknown')
+            }
+            
+            # Add anomaly-specific fields based on the event type
+            if anomaly.get('type') == 'drone_position':
+                signal_strength = anomaly.get('payload', {}).get('signal_strength', 0)
+                transformed["anomaly_type"] = "Low Signal Strength"
+                transformed["description"] = f"Detected: {signal_strength}; too low (threshold 60)"
+            elif anomaly.get('type') == 'target_acquisition':
+                certainty = anomaly.get('payload', {}).get('certainty', 0)
+                transformed["anomaly_type"] = "Low Certainty"
+                transformed["description"] = f"Detected: {certainty}; too low (threshold 70)"
+            
+            transformed_anomalies.append(transformed)
 
-        logger.info(f"Returning {len(filtered_anomalies)} anomalies")
-        return filtered_anomalies, 200
+        logger.info(f"Returning {len(transformed_anomalies)} anomalies")
+        return transformed_anomalies, 200
 
     except json.JSONDecodeError:
         logger.error("Invalid JSON data in anomaly datastore")
