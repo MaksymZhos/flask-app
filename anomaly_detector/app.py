@@ -49,10 +49,10 @@ def update_anomalies():
             is_anomaly = False
 
             if msg_data.get('type') == 'drone_position':
-                if msg_data.get('payload', {}).get('signal_strength', 100) < 60:
+                if msg_data.get('payload', {}).get('signal_strength', 100) < int(os.environ["SIGNAL_STRENGHT"]):
                     is_anomaly = True
             elif msg_data.get('type') == 'target_acquisition':
-                if msg_data.get('payload', {}).get('certainty', 100) < 70:
+                if msg_data.get('payload', {}).get('certainty', 100) < int(os.environ["CERTAINTY"]):
                     is_anomaly = True
 
             if is_anomaly:
@@ -95,10 +95,10 @@ def get_anomalies(event_type=None):
             logger.info("No anomalies found matching criteria")
             return None, 204
             
-        # Transform anomalies to match the expected response schema
+
         transformed_anomalies = []
         for anomaly in filtered_anomalies:
-            # Map the stored anomaly to the expected response format
+
             transformed = {
                 "drone_id": anomaly.get('payload', {}).get('drone_id', 'unknown'),
                 "event_id": anomaly.get('payload', {}).get('trace_id', 'unknown'),

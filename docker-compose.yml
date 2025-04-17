@@ -181,6 +181,8 @@ services:
       - LOG_CONF_FILE=/app/log_conf.yml
       - SERVICE_NAME=anomaly_detector
       - CORS_ALLOW_ALL=${CORS_ALLOW_ALL}
+      - SIGNAL_STRENGHT=60
+      - CERTAINTY=70
     user: nobody
     restart: on-failure:3
     networks:
